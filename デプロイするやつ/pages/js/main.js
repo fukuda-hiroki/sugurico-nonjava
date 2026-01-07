@@ -53,7 +53,7 @@ async function fetchAndDisplayPosts(containerId, userId = null, excludeUserId = 
                 text,
                 delete_date,
                 created_at,
-                users!user_id_auth(user_name),
+                users!user_id_auth(user_name,premium_flag),
                 forum_images ( image_url ) 
             `)
             .or('delete_date.is.null,delete_date.gt.now()')
@@ -84,6 +84,10 @@ async function fetchAndDisplayPosts(containerId, userId = null, excludeUserId = 
                 }
                 const remainingTime = timeLeft(post.delete_date);
                 const timeAgoString = timeAgo(post.created_at);
+	
+                const premiumIconHTML = post.users?.premium_flag === true ? '<img src="../../common/circle-check-solid-full.svg" class="premium-badge">' : '';	
+                let authorName = escapeHTML(post.users?.user_name || '不明');	
+                let authorHTML = `${authorName} ${premiumIconHTML}`;
 
                 return `
                     <a href="/forums/html/forum_detail.html?id=${post.forum_id}" class="post-link">
@@ -91,7 +95,7 @@ async function fetchAndDisplayPosts(containerId, userId = null, excludeUserId = 
                             <div class="post-item-content">
                                 <h3>${escapeHTML(post.title)} <small style="color:gray;">${timeAgoString}</small> </h3>
                                 <p>${escapeHTML(post.text.length > 20 ? post.text.slice(0, 20) + '...' : post.text).replace(/\n/g, '<br>')}</p>
-                                <small>投稿者: ${escapeHTML(post.users.user_name)}</small>
+                                <small>投稿者: ${authorHTML}</small>
                                 <br>
                                 <small style="color:gray;">${remainingTime}</small>
                             </div>
