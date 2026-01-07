@@ -39,9 +39,10 @@ async function setupHeaderAndFooter() {
                 <a href="#" class="dropdown-toggle">${escapeHTML(userName)}さん ${premiumIconHTML}▼</a>
                 <div class="dropdown-menu">
                     <a href="../../auth/html/mypage.html">マイページ</a>
-                    <a href="../../auth/html/update.html">登録情報を変更する</a>
-                    <a href="../../auth/html/bookmarks.html">ブックマーク一覧</a>
-                    <a href="../../auth/html/block_list.html">ブロック中のユーザー管理</a>
+                    <a href="../../auth/html/update.html">登録情報を変更する</a>`;
+
+        if (isPremium) navHTML += `<a href="../../auth/html/bookmarks.html">ブックマーク一覧</a>`;
+        navHTML += `<a href="../../auth/html/block_list.html">ブロック中のユーザー管理</a>
                     <a href="../../auth/html/premium_entry.html">プレミアム機能</a>
                     <hr>
                     <a href="#" id="logout-button">ログアウト</a>

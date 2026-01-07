@@ -48,6 +48,10 @@ document.addEventListener('DOMContentLoaded', async () => { // ★ async を追�
                 card.classList.add('is-visible');
             }, index * 100);
         });
+        const bookmarkLink = document.getElementById("bookmark-link");
+        if (!isPremium) {
+            bookmarkLink.style.display = "none";
+        }
     }
 
     function setupEventListeners() {
@@ -236,7 +240,7 @@ document.addEventListener('DOMContentLoaded', async () => { // ★ async を追�
         if (periodSelect.value !== 'all') params.set('period', periodSelect.value);
         if (sortSelect.value !== 'newest') params.set('sort', sortSelect.value);
         if (tagSelect.value !== '') params.set('tag', tagSelect.value);
-        if (showedSelect.value !== 'all') params.set('showed', showedSelect.value); 
+        if (showedSelect.value !== 'all') params.set('showed', showedSelect.value);
 
         if (currentPage > 1) {
             params.set('page', currentPage - 1);

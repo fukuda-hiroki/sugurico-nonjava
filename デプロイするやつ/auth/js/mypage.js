@@ -1,6 +1,6 @@
 'use strict';
 
-document.addEventListener('DOMContentLoaded', async () => { 
+document.addEventListener('DOMContentLoaded', async () => {
 
     const mypageTitle = document.getElementById('mypage-title');
     const postsListContainer = document.getElementById('my-posts-list');
@@ -46,6 +46,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 card.classList.add('is-visible');
             }, index * 100);
         });
+        const bookmarkLink = document.getElementById("bookmark-link");
+        if (!isPremium) {
+            bookmarkLink.style.display = "none";
+        }
     }
 
     function setupEventListeners() {
@@ -65,7 +69,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         filterButton.addEventListener('click', () => {
-            updateURL(); 
+            updateURL();
             fetchAndDisplayUserPosts(1);
         });
         postsListContainer.addEventListener('click', (event) => {
@@ -224,7 +228,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (periodSelect.value !== 'all') params.set('period', periodSelect.value);
         if (sortSelect.value !== 'newest') params.set('sort', sortSelect.value);
         if (tagSelect.value !== '') params.set('tag', tagSelect.value);
-        if (showedSelect.value !== 'all') params.set('showed', showedSelect.value); 
+        if (showedSelect.value !== 'all') params.set('showed', showedSelect.value);
 
         if (currentPage > 1) {
             params.set('page', currentPage - 1);
