@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 created_at,
                 forums (
                     *,
-                    users!forums_user_id_auth_fkey ( user_name ),
+                    users!forums_user_id_auth_fkey ( user_name,premium_flag ),
                     forum_images ( image_url )
                 )
             `)
@@ -78,6 +78,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const remainingTime = timeLeft(post.delete_date);
         const timeAgoString = timeAgo(post.created_at);
 
+        const premiumIconHTML = post.users?.premium_flag === true ? '<img src="/common/circle-check-solid-full.svg" class="premium-badge">' : '';
+        let authorName = escapeHTML(post.users?.user_name || '不明');
+        let authorHTML = `${authorName} ${premiumIconHTML}`;
         let actionsHTML = '';
         if (currentUser.id === post.user_id_auth) {
             actionsHTML = `
@@ -95,7 +98,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div class="post-item-content">
                             <h3>${escapeHTML(post.title)} <small style="color:gray;">${timeAgoString}</small></h3>
                             <p>${nl2br(post.text.length > 50 ? post.text.slice(0, 50) + '...' : post.text)}</p>
-                            <small>投稿者: ${escapeHTML(post.users.user_name)}</small>
+                            <small>投稿者: ${authorHTML}</small>
                             <br>
                             <small style="color:gray;">${remainingTime}</small>
                         </div>
@@ -126,7 +129,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 paginationHTML += `<a href="?page=${i}">${i}</a>`;
             }
         }
-        
+
         if (currentPage < totalPages) {
             paginationHTML += `<a href="?page=${currentPage + 1}">次へ »</a>`;
         }
