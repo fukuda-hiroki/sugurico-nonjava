@@ -3,7 +3,7 @@
 
 
 document.addEventListener('DOMContentLoaded', async () => {
-    
+
     const { data: { session } } = await supabaseClient.auth.getSession();
 
     let blockedUserIds = [];
@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function fetchAndDisplayPosts(containerId, userId = null, excludeUserId = null, blockedUserIds = []) {
     const container = document.getElementById(containerId);
     if (!container) return;
-    
+
     try {
         let query = supabaseClient
             .from('forums')
@@ -72,7 +72,7 @@ async function fetchAndDisplayPosts(containerId, userId = null, excludeUserId = 
         }
 
         const { data: posts, error } = await query;
-        
+
         if (error) throw error;
 
         // --- HTMLの組み立て --- (ここから下は変更なし)
@@ -84,9 +84,9 @@ async function fetchAndDisplayPosts(containerId, userId = null, excludeUserId = 
                 }
                 const remainingTime = timeLeft(post.delete_date);
                 const timeAgoString = timeAgo(post.created_at);
-	
-                const premiumIconHTML = post.users?.premium_flag === true ? '<img src="../../common/circle-check-solid-full.svg" class="premium-badge">' : '';	
-                let authorName = escapeHTML(post.users?.user_name || '不明');	
+
+                const premiumIconHTML = post.users?.premium_flag === true ? '<img src="/common/circle-check-solid-full.svg" class="premium-badge">' : '';
+                let authorName = escapeHTML(post.users?.user_name || '不明');
                 let authorHTML = `${authorName} ${premiumIconHTML}`;
 
                 return `

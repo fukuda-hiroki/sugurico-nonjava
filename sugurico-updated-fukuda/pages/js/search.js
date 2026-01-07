@@ -153,6 +153,10 @@ document.addEventListener('header-loaded', async () => {
         const remainingTime = timeLeft(post.delete_date);
         const timeAgoString = timeAgo(post.created_at);
 
+        const premiumIconHTML = post.premium_flag === true ? '<img src="../../common/circle-check-solid-full.svg" class="premium-badge">' : '';
+        let authorName = escapeHTML(post.user_name || '不明');
+        let authorHTML = `${authorName} ${premiumIconHTML}`;
+
         return `
                     <a href="../../forums/html/forum_detail.html?id=${post.forum_id}" class="post-link">
                         <article class="post-item ${thumbnailHTML ? 'has-thumbnail' : ''}" style="min-width:96%">
@@ -160,7 +164,7 @@ document.addEventListener('header-loaded', async () => {
                             <div class="post-item-content">
                             <h3>${escapeHTML(post.title)} <small style="color:gray;">${timeAgoString}</small> </h3>
                                 <p>${nl2br(post.text.length > 20 ? post.text.slice(0, 20) + '...' : post.text).replace(/\n/g, '<br>')}</p>
-                                <small>投稿者: ${escapeHTML(post.user_name)}</small>
+                                <small>投稿者: ${authorHTML}</small>
                                 <br>
                                 <small style="color:gray;">${remainingTime}</small>
                             </div>

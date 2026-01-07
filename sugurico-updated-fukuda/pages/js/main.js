@@ -96,7 +96,7 @@ async function fetchAndDisplayPosts(containerId, userId = null, excludeUserId = 
                 const timeAgoString = timeAgo(post.created_at);
                 console.log(post.users?.premium_flag);
 
-                const premiumIconHTML = post.users?.premium_flag === true ? '<img src="../../common/circle-check-solid-full.svg" class="premium-badge">' : '';
+                const premiumIconHTML = post.premium_flag === true ? '<img src="../../common/circle-check-solid-full.svg" class="premium-badge">' : '';
                 let authorName = escapeHTML(post.users?.user_name || '不明');
                 let authorHTML = `${authorName} ${premiumIconHTML}`;
                 return `
