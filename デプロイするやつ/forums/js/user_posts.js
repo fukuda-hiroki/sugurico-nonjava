@@ -26,11 +26,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const { data: targetUser, error: userError } = await supabaseClient
                 .from('users')
-                .select('user_name')
+                .select('user_name, premium_flag')
                 .eq('id', targetUserId)
                 .single();
             if (userError || !targetUser) throw new Error('ユーザーが見つかりません。');
-            pageTitle.textContent = `${targetUser.user_name}さんの投稿一覧`
+            const premiumIconHTML = targetUser.premium_flag === true ? '<img src="../../common/circle-check-solid-full.svg" style="width:30px;" >' : '';
+            pageTitle.innerHTML = `${targetUser.user_name}さん ${premiumIconHTML}の投稿一覧`;
         } catch (e) {
             pageTitle.textContent = '';
             return;
@@ -125,6 +126,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const remainingTime = typeof timeLeft === 'function' ? timeLeft(post.delete_date) : '';
         const timeAgoString = typeof timeAgo === 'function' ? timeAgo(post.created_at) : '';
 
+        const premiumIconHTML = post.premium_flag === true ? '<img src="/common/circle-check-solid-full.svg" class="premium-badge">' : '';
+        let authorName = escapeHTML(post.user_name || '不明');
+        let authorHTML = `${authorName} ${premiumIconHTML}`;
+
         const shortText = post.text && post.text.length > 50
             ? escapeHTML(post.text.substring(0, 50)) + '...'
             : escapeHTML(post.text || '');
@@ -134,10 +139,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div class="post-item-main">
                             <h3>${escapeHTML(post.title)} <small>${timeAgoString}</small></h3>
                             <p>${shortText}</p>
-                            <div class="post-meta">
-                                <small>投稿者: ${escapeHTML(post.user_name)}</small>
-                                <small style="color:gray;">${remainingTime}</small>
-                            </div>
+                            <small style="color:gray;">投稿者: ${authorHTML}</small>
+                            <small style="color:gray;">${remainingTime}</small>
                         </div>
                         ${thumbnailHTML}
                     </article>
