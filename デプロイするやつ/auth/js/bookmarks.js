@@ -94,7 +94,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             <article class="post-item">
                 <a href="/forums/html/forum_detail.html?id=${post.forum_id}" class="post-item-link">
                     <div class="post-item-main ${thumbnailHTML ? 'has-thumbnail' : ''}">
-                        ${thumbnailHTML}
                         <div class="post-item-content">
                             <h3>${escapeHTML(post.title)} <small style="color:gray;">${timeAgoString}</small></h3>
                             <p>${nl2br(post.text.length > 50 ? post.text.slice(0, 50) + '...' : post.text)}</p>
@@ -104,6 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                     </div>
                 </a>
+                ${thumbnailHTML}
                 ${actionsHTML}
             </article>
         `;
