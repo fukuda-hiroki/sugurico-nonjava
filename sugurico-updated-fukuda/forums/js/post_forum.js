@@ -42,14 +42,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (isEditMode) {
+            const newTitle = '投稿を編集する | スグリコ'
             pageTitle.textContent = '投稿を編集する';
+            document.title = newTitle;
             submitButton.textContent = '更新する';
             await loadPostForEditing();
         } else {
+            const newTitle = '新しい記録を投稿 | スグリコ';
             pageTitle.textContent = '新しい記録を投稿';
+            document.title = newTitle;
             submitButton.textContent = '投稿する';
             if (window.imageManager) window.imageManager.init(isPremiumUser, []);
-
             if (window.tagManager) window.tagManager.init([]);// 新規作成時は空のタグで初期化
         }
 
@@ -157,6 +160,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+
+    // 2026年1月7日　非表示指定されたら紐づいたブックマークすべて削除せよ
     async function createPost() {
         const imageInputs = imageInputContainer.querySelectorAll('.image-input');
         const filesToUpload = Array.from(imageInputs).map(input => input.files[0]).filter(Boolean);
@@ -177,6 +182,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function updatePost() {
+        const newDeleteDate = calculateDeleteDate();
+
         await supabaseClient.from('forums').update({
             title: titleInput.value,
             text: textInput.value,
@@ -205,6 +212,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (filesToUpload.length > 0) {
             const imageUrls = await uploadImages(filesToUpload);
             await saveImageUrls(editId, imageUrls);
+        }
+
+        if (newDeleteDate && new Date(newDeleteDate) <= new Date()) {
+            console.log("投稿が非公開に設定されたため、関連するブックマークを削除します。");
+
+            const { error: deleteBookmarkError } = await supabaseClient
+                .from('bookmark')
+                .delete()
+                .eq('post_id', editId);
+            if (deleteBookmarkError) {
+                console.error('ブックマークの削除に失敗しました:', deleteBookmarkError);
+            }
         }
     }
 

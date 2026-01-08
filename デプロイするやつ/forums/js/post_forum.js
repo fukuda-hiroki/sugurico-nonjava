@@ -39,11 +39,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (isEditMode) {
+            const newTitle = '投稿を編集する | スグリコ'
             pageTitle.textContent = '投稿を編集する';
+            document.title = newTitle;
             submitButton.textContent = '更新する';
             await loadPostForEditing();
         } else {
+            const newTitle = '新しい記録を投稿 | スグリコ';
             pageTitle.textContent = '新しい記録を投稿';
+            document.title = newTitle;
             submitButton.textContent = '投稿する';
             if (window.imageManager) window.imageManager.init(isPremiumUser, []);
 
@@ -173,6 +177,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function updatePost() {
+        const newDeleteDate = calculateDeleteDate();
+
         await supabaseClient.from('forums').update({
             title: titleInput.value,
             text: textInput.value,
@@ -201,6 +207,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (filesToUpload.length > 0) {
             const imageUrls = await uploadImages(filesToUpload);
             await saveImageUrls(editId, imageUrls);
+        }
+
+        
+        if (newDeleteDate && new Date(newDeleteDate) <= new Date()) {
+
+            const { error: deleteBookmarkError } = await supabaseClient
+                .from('bookmark')
+                .delete()
+                .eq('post_id', editId);
+            if (deleteBookmarkError) {
+                console.error('ブックマークの削除に失敗しました:', deleteBookmarkError);
+            }
         }
     }
 
