@@ -29,48 +29,77 @@ document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const currentPage = parseInt(urlParams.get('page')) || 1;
     const postsPerPage = 10;
-    const offset = (currentPage - 1) * postsPerPage;
 
     // --- 3. ブックマークした投稿を取得して表示 ---
     try {
         postsListContainer.innerHTML = '<p>読み込み中...</p>';
 
-        // まず、自分がブックマークした投稿の総件数を取得
-        const { count: totalPosts, error: countError } = await supabaseClient
-            .from('bookmark')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', currentUser.id);
+        // ▼▼▼ このtryブロックの中身をすべて置き換える ▼▼▼
 
-        if (countError) throw countError;
-
-        if (totalPosts === 0) {
-            postsListContainer.innerHTML = '<p>ブックマークされた投稿はまだありません。</p>';
-            return;
-        }
-
-        // 次に、現在のページに表示する投稿データを取得
-        // bookmarkテーブルを経由して、forumsテーブルの情報をJOINする
-        const { data: posts, error: postsError } = await supabaseClient
+        // 1. ページネーションなしで、ブックマークした投稿IDと投稿データをすべて取得
+        const { data: bookmarkedItems, error: postsError } = await supabaseClient
             .from('bookmark')
             .select(`
-                created_at,
                 forums (
-                    *,
-                    users!forums_user_id_auth_fkey ( user_name,premium_flag ),
+                    forum_id,
+                    title,
+                    text,
+                    delete_date,
+                    created_at,
+                    user_id_auth,
+                    users!forums_user_id_auth_fkey ( user_name, premium_flag ),
                     forum_images ( image_url )
                 )
             `)
             .eq('user_id', currentUser.id)
-            .order('created_at', { ascending: false }) // ブックマークした日時で降順ソート
-            .range(offset, offset + postsPerPage - 1);
+            .order('created_at', { asending: false });// ブックマークした日時でソート
 
         if (postsError) throw postsError;
 
-        // --- 4. 取得したデータでHTMLを生成・表示 ---
-        postsListContainer.innerHTML = posts.map(item => renderPostHTML(item.forums)).join('');
+        if (!bookmarkedItems || bookmarkedItems.length === 0) {
+            postsListContainer.innerHTML = '<p>ブックマークされた投稿はまだありません。</p>';
+            return;
+        }
+        // 2. 期限切れの投稿IDを収集し、有効な投稿だけをフィルタリング
+        const expiredPostIds = [];
+        const validPosts = bookmarkedItems
+            .map(item => item.forums)// forumsオブジェクトだけを取り出す
+            .filter(post => {
+                if (post && (post.delete_date === null || new Date(post.delete_date) > new Date())) {
+                    return true;// 有効な投稿
+                } else {
+                    if (post) expiredPostIds.push(post.forum_id); // 期限切れのIDを収集
+                    return false;// 無効な投稿 (期限切れ or 削除済み)
+                }
+            });
 
-        // --- 5. ページネーションを描画 ---
+        // 3. (バックグラウンドで) 期限切れのブックマークをDBから削除
+
+        if (expiredPostIds.length > 0) {
+            alert("期限切れの投稿がありましたので自動的に削除されました。");
+            console.log('期限切れのブックマークを削除します:', expiredPostIds);
+            // awaitを付けずに実行 (Fire and Forget)
+            supabaseClient.from('bookmark')
+                .delete()
+                .eq('user_id', currentUser.id)
+                .in('post_id', expiredPostIds)
+                .then();
+
+        }
+
+        // 4. 有効な投稿でページネーションと表示を行う
+        const totalPosts = validPosts.length;
+        if (totalPosts === 0) {
+            postsListContainer.innerHTML = '<p>ブックマークされた投稿はまだありません。</p>';
+            return;
+        }
+        // 手動でページネーション処理
+        const offset = (currentPage - 1) * postsPerPage;
+        const postToShow = validPosts.slice(offset, offset + postsPerPage);
+
+        postsListContainer.innerHTML = postToShow.map(post => renderPostHTML(post)).join('');
         renderPagination(totalPosts, currentPage, postsPerPage);
+        // ▲▲▲ 置き換えここまで ▲▲▲
 
     } catch (error) {
         console.error('ブックマークの取得エラー:', error);

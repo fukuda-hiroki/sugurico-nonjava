@@ -24,41 +24,67 @@ document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const currentPage = parseInt(urlParams.get('page')) || 1;
     const postsPerPage = 10;
-    const offset = (currentPage - 1) * postsPerPage;
 
     try {
         postsListContainer.innerHTML = '<p>読み込み中...</p>';
 
-        const { count: totalPosts, error: countError } = await supabaseClient
-            .from('bookmark')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', currentUser.id);
-
-        if (countError) throw countError;
-
-        if (totalPosts === 0) {
-            postsListContainer.innerHTML = '<p>ブックマークされた投稿はまだありません。</p>';
-            return;
-        }
-
-        const { data: posts, error: postsError } = await supabaseClient
+        const { data: bookmarkedItems, error: postsError } = await supabaseClient
             .from('bookmark')
             .select(`
-                created_at,
                 forums (
-                    *,
-                    users!forums_user_id_auth_fkey ( user_name,premium_flag ),
+                    forum_id,
+                    title,
+                    text,
+                    delete_date,
+                    created_at,
+                    user_id_auth,
+                    users!forums_user_id_auth_fkey ( user_name, premium_flag ),
                     forum_images ( image_url )
                 )
             `)
             .eq('user_id', currentUser.id)
-            .order('created_at', { ascending: false })
-            .range(offset, offset + postsPerPage - 1);
+            .order('created_at', { asending: false });
 
         if (postsError) throw postsError;
 
-        postsListContainer.innerHTML = posts.map(item => renderPostHTML(item.forums)).join('');
+        if (!bookmarkedItems || bookmarkedItems.length === 0) {
+            postsListContainer.innerHTML = '<p>ブックマークされた投稿はまだありません。</p>';
+            return;
+        }
 
+        const expiredPostIds = [];
+        const validPosts = bookmarkedItems
+            .map(item => item.forums)
+            .filter(post => {
+                if (post && (post.delete_date === null || new Date(post.delete_date) > new Date())) {
+                    return true;
+                } else {
+                    if (post) expiredPostIds.push(post.forum_id);
+                    return false;
+                }
+            });
+
+
+        if (expiredPostIds.length > 0) {
+            alert("期限切れの投稿がありましたので自動的に削除されました。");
+            console.log('期限切れのブックマークを削除します:', expiredPostIds);
+            supabaseClient.from('bookmark')
+                .delete()
+                .eq('user_id', currentUser.id)
+                .in('post_id', expiredPostIds)
+                .then();
+
+        }
+
+        const totalPosts = validPosts.length;
+        if (totalPosts === 0) {
+            postsListContainer.innerHTML = '<p>ブックマークされた投稿はまだありません。</p>';
+            return;
+        }
+        const offset = (currentPage - 1) * postsPerPage;
+        const postToShow = validPosts.slice(offset, offset + postsPerPage);
+
+        postsListContainer.innerHTML = postToShow.map(post => renderPostHTML(post)).join('');
         renderPagination(totalPosts, currentPage, postsPerPage);
 
     } catch (error) {
